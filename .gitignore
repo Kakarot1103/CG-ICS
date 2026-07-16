@@ -1,0 +1,23 @@
+# ---- Runtime / experiment outputs ----
+__pycache__/
+*.pyc
+*.egg-info/
+/checkpoints/
+/results
+/data
+swanlog/
+*.png
+
+# ---- Pretrained weights (place via symlink, do not commit) ----
+/Pretrained_models
+
+# ---- Editor / tool artifacts ----
+.zcode/
+.vscode/
+.idea/
+
+# ---- Internal agent guidance (not for release) ----
+AGENTS.md
+
+# ---- OS artifacts ----
+.DS_Store
