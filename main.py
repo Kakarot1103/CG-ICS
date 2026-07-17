@@ -274,7 +274,7 @@ def evalute(args, segmenter, dataset, tree_searcher, device, rank, world_size):
 
             # Regenerate the masked reference image (candidate generation already done inside tree_search) for the concatenated visualization
             ref_ins_mask = split_connected_components(ref_mask_cpu)
-            ref_img_pre, _ = make_ref_image_for_llm(batch['support_img'][0].cpu(), ref_ins_mask, crop=False, alpha=0.3)
+            ref_img_pre, _ = make_ref_image_for_llm(batch['support_img'][0].cpu(), ref_ins_mask, crop=True, alpha=0.3)
 
             # Horizontally concatenate ref_img_pil, ref_img_pre and query_img_pil
             widths = [ref_img_pil.width, ref_img_pre.width, query_img_pil.width]

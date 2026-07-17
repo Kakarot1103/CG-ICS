@@ -119,7 +119,7 @@ class TreeSearcher:
             ref_img_pil = torchvision.transforms.functional.to_pil_image(ref_img)
             ref_imgs_pil.append(ref_img_pil)
             ref_ins_mask = split_connected_components(ref_mask)
-            ref_img_pre, _ = make_ref_image_for_llm(ref_img, ref_ins_mask, crop=False, alpha=0.3)
+            ref_img_pre, _ = make_ref_image_for_llm(ref_img, ref_ins_mask, crop=True, alpha=0.3)
             ref_imgs_masked_pil.append(ref_img_pre)
 
         # ========== Run an independent tree-search per ref to get that ref's final concept ==========

@@ -4,6 +4,13 @@ from typing import Tuple
 from sam3.sam3.model.box_ops import masks_to_boxes
 from utils.new_viz import draw_instances_viz
 
+# Minimum edge length (in pixels, on the original image) for a crop box.
+# If the largest mask bbox is narrower than this in either dimension, the mask
+# is a thin sliver (pole/rope-like) and cropping+proportional resize would
+# produce a degenerate near-1D image (e.g. 512x2) that the downstream VLM
+# preprocessor rejects. In that case we skip cropping and keep the full image.
+MIN_CROP_EDGE = 32
+
 
 def make_ref_image_for_llm(
     ref_image: torch.Tensor,
@@ -80,7 +87,14 @@ def make_ref_image_for_llm(
         x0, y0, x1, y1 = boxes[max_idx].detach().cpu().tolist()
         box_w = x1 - x0
         box_h = y1 - y0
-        if box_w > 0 and box_h > 0:
+        # Minimum-edge fallback: judge the ORIGINAL mask bbox (before the 1.3x
+        # zoom). If the largest mask is a thin sliver (pole/rope-like), cropping
+        # + proportional resize would yield a degenerate near-1D image (e.g.
+        # 512x2) that the VLM preprocessor rejects. Skip cropping entirely and
+        # keep the full-size highlighted image; boxes stay in original coords.
+        if box_w < MIN_CROP_EDGE or box_h < MIN_CROP_EDGE:
+            crop_box = None
+        elif box_w > 0 and box_h > 0:
             cx = (x0 + x1) / 2.0
             cy = (y0 + y1) / 2.0
             scale = 1.3
@@ -90,9 +104,9 @@ def make_ref_image_for_llm(
             x1 = min(W, int(round(cx + new_w / 2.0)))
             y0 = max(0, int(round(cy - new_h / 2.0)))
             y1 = min(H, int(round(cy + new_h / 2.0)))
-        x1 = max(x1, x0 + 1)
-        y1 = max(y1, y0 + 1)
-        crop_box = (x0, y0, x1, y1)
+            x1 = max(x1, x0 + 1)
+            y1 = max(y1, y0 + 1)
+            crop_box = (x0, y0, x1, y1)
 
     if has_foreground:
         # Use the new visualization: draw only the mask and its contour (auto polygon), no bbox
@@ -116,6 +130,7 @@ def make_ref_image_for_llm(
         x0, y0, x1, y1 = crop_box
         crop_w = max(1, x1 - x0)
         crop_h = max(1, y1 - y0)
+
         cropped = vis_pil.crop((x0, y0, x1, y1))
         # Scale proportionally, aligning the long side to the original size (no padding)
         if crop_w >= crop_h:
