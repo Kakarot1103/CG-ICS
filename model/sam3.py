@@ -116,10 +116,12 @@ class Sam3Segmenter(nn.Module):
         width = state["original_width"]
         height = state["original_height"]
         if state.get('masks') is None:
-            # No prediction: fall back to an empty result
+            # No prediction: fall back to an empty result.
+            # Keep the tensors on self.device so downstream torch.cat across
+            # references does not hit a CPU/GPU device mismatch.
             return {
-                'semantic_mask': torch.zeros(height, width),
-                'instances': torch.zeros(0, 1, height, width),
+                'semantic_mask': torch.zeros(height, width, device=self.device),
+                'instances': torch.zeros(0, 1, height, width, device=self.device),
                 'presence_score': 0.0,
             }
 

@@ -195,7 +195,7 @@ def evalute(args, segmenter, dataset, tree_searcher, device, rank, world_size):
                 instances = res_cat['instances']  # [M,1,H,Wcat]
                 # Slice the query half (cat image is horizontally concatenated, width = ref+query)
                 cat_width = instances.shape[-1]
-                query_ins_masks.append(instances[:, :, :, cat_width // 2:].squeeze(1))  # [M,H,W]
+                query_ins_masks.append(instances[:, :, :, cat_width // 2:].squeeze(1).to(device))  # [M,H,W]
             query_ins_mask = torch.cat(query_ins_masks, dim=0)
 
             # ============ STEP 4: run prompt + bbox inference on the query to get the mask ============
